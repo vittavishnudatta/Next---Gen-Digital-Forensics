@@ -1,0 +1,171 @@
+{% extends 'court_dashboard.html' %}
+
+{% block body %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="text-center">Shared Files</h3>
+                </div>
+                <div class="card-body">
+                    {% if page_obj %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>File Name</th>
+                                    <th>Case Number</th>
+                                    <th>Evidence Type</th>
+                                    <th>Upload Date</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for file in page_obj %}
+                                <tr>
+                                    <td>{{ file.filename }}</td>
+                                    <td>{{ file.case_number }}</td>
+                                    <td>{{ file.evidence_type }}</td>
+                                    <td>{{ file.upload_date|date:"Y-m-d H:i" }}</td>
+                                    <td>
+                                        {% if file.status == 'sharedkryscourt' %}
+                                        <span class="badge bg-warning">Pending OTP</span>
+                                        {% elif file.status == 'decryptionshared' %}
+                                        <span class="badge bg-success">Ready to Download</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if file.status == 'sharedkryscourt' %}
+                                        <div class="d-flex align-items-center" id="otp-container-{{ file.id }}">
+                                            <button type="button" class="btn btn-primary btn-sm me-2" onclick="showOTPInput({{ file.id }})">
+                                                Enter OTP
+                                            </button>
+                                            <div class="otp-input-group" id="otp-input-{{ file.id }}" style="display: none;">
+                                                <input type="text" class="form-control form-control-sm d-inline-block me-2" 
+                                                       id="otp-{{ file.id }}" placeholder="Enter OTP" style="width: 100px;">
+                                                <button type="button" class="btn btn-success btn-sm" onclick="verifyOTP({{ file.id }})">
+                                                    Verify
+                                                </button>
+                                            </div>
+                                        </div>
+                                        {% elif file.status == 'decryptionshared' %}
+                                        <a href="{% url 'downloadfile' file.id %}" class="btn btn-success btn-sm">
+                                            Download
+                                        </a>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination -->
+                    {% if page_obj.has_other_pages %}
+                    <nav aria-label="Page navigation" class="mt-4">
+                        <ul class="pagination justify-content-center">
+                            {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                            </li>
+                            {% endif %}
+
+                            {% for num in page_obj.paginator.page_range %}
+                            <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                                <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                            </li>
+                            {% endfor %}
+
+                            {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+                    {% else %}
+                    <div class="alert alert-info text-center">
+                        <i class="fas fa-info-circle"></i> No files available for download.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+function showOTPInput(fileId) {
+    // Hide the Enter OTP button
+    const container = document.getElementById(`otp-container-${fileId}`);
+    container.querySelector('button').style.display = 'none';
+    // Show the OTP input group
+    document.getElementById(`otp-input-${fileId}`).style.display = 'inline-flex';
+}
+
+function verifyOTP(fileId) {
+    const otpInput = document.getElementById(`otp-${fileId}`);
+    const otp = otpInput.value;
+    const verifyButton = document.querySelector(`#otp-input-${fileId} .btn-success`);
+    
+    if (!otp) {
+        alert('Please enter the OTP');
+        return;
+    }
+
+    // Disable the verify button
+    verifyButton.disabled = true;
+    verifyButton.innerHTML = 'Verifying...';
+    
+    const formData = new FormData();
+    formData.append('decryptiokey', otp);
+    formData.append('csrfmiddlewaretoken', getCookie('csrftoken'));
+    
+    fetch(`/decrypt_court_file/${fileId}/`, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            // Show success message
+            alert(data.message);
+            // Reload the page to show updated status
+            window.location.reload();
+        } else {
+            alert(data.message || 'Invalid OTP!');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while verifying OTP. Please try again.');
+    })
+    .finally(() => {
+        // Re-enable the verify button
+        verifyButton.disabled = false;
+        verifyButton.innerHTML = 'Verify';
+    });
+}
+</script>
+{% endblock %}

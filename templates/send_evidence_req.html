@@ -1,0 +1,82 @@
+{% extends 'court_dashboard.html' %}
+
+{% block body %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Request Evidence</h4>
+                </div>
+                <div class="card-body">
+                    {% if msg %}
+                    <div class="alert alert-success">{{ msg }}</div>
+                    {% endif %}
+                    
+                    {% if pending_evidence %}
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <label for="case_number" class="form-label">Select Evidence to Request</label>
+                                <select class="form-control" id="case_number" name="case_number" required>
+                                    <option value="" disabled selected>Select evidence to request</option>
+                                    {% for evidence in pending_evidence %}
+                                        <option value="{{ evidence.case_number }}">
+                                            Case: {{ evidence.case_number }} | File: {{ evidence.filename }} | Type: {{ evidence.evidence_type }} | Owner: {{ evidence.ownername }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-success">Send Request</button>
+                    </form>
+
+                    <div class="mt-4">
+                        <h5>Available Evidence</h5>
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Case Number</th>
+                                        <th>File Name</th>
+                                        <th>Evidence Type</th>
+                                        <th>Owner</th>
+                                        <th>Status</th>
+                                        <th>Upload Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for evidence in pending_evidence %}
+                                    <tr>
+                                        <td>{{ evidence.case_number }}</td>
+                                        <td>{{ evidence.filename }}</td>
+                                        <td>{{ evidence.evidence_type }}</td>
+                                        <td>{{ evidence.ownername }}</td>
+                                        <td>
+                                            <span class="badge {% if evidence.status == 'pending' %}bg-warning
+                                                              {% else %}bg-info{% endif %}">
+                                                {{ evidence.status }}
+                                            </span>
+                                        </td>
+                                        <td>{{ evidence.upload_date|date:"Y-m-d H:i" }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> No evidence available for request at this time. All evidence has either been requested or shared with the court.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block noneed %}
+{% endblock %}

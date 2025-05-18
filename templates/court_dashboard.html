@@ -1,0 +1,58 @@
+{% extends 'index.html' %}
+
+{% block nav%}
+<div class="container-fluid nav-bar px-0 px-lg-4 py-lg-0">
+    <div class="container">
+        <nav class="navbar navbar-expand-lg navbar-light"> 
+            <a href="#" class="navbar-brand p-0">
+                <h1 class="text-primary mb-0"><i class="fab fa-slack me-2"></i>Forensic Security</h1>
+                <!-- <img src="/static/img/logo.png" alt="Logo"> -->
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse">
+                <span class="fa fa-bars"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarCollapse">
+                <div class="navbar-nav mx-0 mx-lg-auto">
+                    <a href="{% url 'court_dashboard'%}" class="nav-item nav-link active">Home</a>
+                    <div class="nav-item dropdown">
+                        <a href="#" class="nav-link" data-bs-toggle="dropdown">
+                            <span class="dropdown-toggle">Evidence</span>
+                        </a>
+                        <div class="dropdown-menu">
+                            <a href="{% url 'send_evidence_req' %}" class="dropdown-item">Evidence Request</a>
+                            <a href="{% url 'Court_Response'%}" class="dropdown-item">View Response</a>
+                        </div>
+                    </div>
+                    <a href="{% url 'court_login'%}" class="nav-item nav-link">Logout</a>
+                </div>
+            </div>
+        </nav>
+    </div>
+</div>
+{% endblock %}
+
+
+
+{% block body %}
+        <!-- Carousel Start -->
+        <div class="header-carousel owl-carousel">
+            <div class="header-carousel-item bg-primary">
+                <div class="carousel-caption">
+                    <div class="container">
+                        <div class="row g-4 align-items-center">
+                            <div class="col-lg-7 animated fadeInLeft">
+                                <div class="text-sm-center text-md-start">
+                                    <h4 class="display-2 text-white mb-4">Welcome 'Court' </h4>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Carousel End -->
+
+{% endblock %}
+
+{% block noneed %}
+{% endblock %}
